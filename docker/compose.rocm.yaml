@@ -1,0 +1,55 @@
+services:
+  # ROCm interactive dev container
+  #
+  # Commands assume CWD = repo's docker/ directory.
+  # Build once:  docker compose -f compose.rocm.yaml build sglang-rocm
+  # Start:       docker compose -f compose.rocm.yaml up -d
+  # Attach:      docker compose -f compose.rocm.yaml exec sglang-rocm bash
+  # Stop/clean:  docker compose -f compose.rocm.yaml down
+  #
+  # Override GPU/ROCm flavor via env, e.g.:
+  #   GPU_ARCH=gfx950-rocm720 docker compose -f compose.rocm.yaml build sglang-rocm
+  sglang-rocm:
+    image: sglang-rocm:${GPU_ARCH:-gfx942-rocm720}
+    build:
+      context: ..
+      dockerfile: docker/rocm.Dockerfile
+      args:
+        GPU_ARCH: ${GPU_ARCH:-gfx942-rocm720}
+        SGL_BRANCH: ${SGL_BRANCH:-main}
+    container_name: sglang-rocm-${USER:-dev}
+    volumes:
+      - ../:/sgl-workspace/sglang
+      - ${HOME}/.cache/huggingface:/root/.cache/huggingface
+      - /remote/vast0/share-mv:/remote/vast0/share-mv
+    devices:
+      - /dev/kfd
+      - /dev/dri
+    group_add:
+      - video
+      - render
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp=unconfined
+    network_mode: host
+    ipc: host
+    shm_size: "64gb"
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    environment:
+      - HF_TOKEN=${HF_TOKEN:-}
+    configs:
+      - source: rocm_gitconfig
+        target: /etc/gitconfig
+    stdin_open: true
+    tty: true
+    command: ["sleep", "infinity"]
+
+configs:
+  rocm_gitconfig:
+    content: |
+      [safe]
+        directory = *
+        directory = /sgl-workspace/sglang
