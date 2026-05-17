@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "moreh_plugin"
+version = "0.0.1"
+description = "Out-of-tree SGLang plugin targeting AMD ROCm."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Moreh" }]
+dependencies = [
+    "sglang",
+]
+
+[project.entry-points."sglang.srt.platforms"]
+moreh_platform = "moreh_plugin.platform:activate"
+
+[project.entry-points."sglang.srt.plugins"]
+moreh_hooks      = "moreh_plugin.hooks:install"
+moreh_backends   = "moreh_plugin.backends:install"
+moreh_templates  = "moreh_plugin.templates:install"
+
+[tool.setuptools.packages.find]
+where = ["src"]
